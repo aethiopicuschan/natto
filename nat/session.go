@@ -18,6 +18,7 @@ type Session struct {
 	keepaliveInterval time.Duration
 }
 
+// NewSession creates a new Session to the given remote address over the Mux.
 func NewSession(mux *Mux, remote *net.UDPAddr, queue int) *Session {
 	return &Session{
 		mux:        mux,
@@ -26,13 +27,12 @@ func NewSession(mux *Mux, remote *net.UDPAddr, queue int) *Session {
 	}
 }
 
-func (s *Session) SetKeepalive(interval time.Duration) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.keepaliveInterval = interval
-}
+// -----------------------------------------------------------------------------
+// Data plane (application payload)
+// -----------------------------------------------------------------------------
 
-func (s *Session) Send(p []byte) error {
+// SendData sends application data to the remote peer.
+func (s *Session) SendData(p []byte) error {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	if s.closed {
@@ -41,7 +41,8 @@ func (s *Session) Send(p []byte) error {
 	return s.mux.Send(s.remoteAddr, PacketData, p)
 }
 
-func (s *Session) Recv(ctx context.Context) ([]byte, *net.UDPAddr, error) {
+// RecvData receives application data from the remote peer.
+func (s *Session) RecvData(ctx context.Context) ([]byte, *net.UDPAddr, error) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -52,7 +53,6 @@ func (s *Session) Recv(ctx context.Context) ([]byte, *net.UDPAddr, error) {
 				return nil, nil, ErrConnectionClosed
 			}
 			if inb.pkt.Kind != PacketData {
-				// Session ignores control packets; those are handled by Puncher/Manager.
 				continue
 			}
 			return inb.pkt.Payload, inb.addr, nil
@@ -60,6 +60,65 @@ func (s *Session) Recv(ctx context.Context) ([]byte, *net.UDPAddr, error) {
 	}
 }
 
+// -----------------------------------------------------------------------------
+// Control plane (meta / coordination)
+// -----------------------------------------------------------------------------
+
+// SendControl sends a control packet to the peer.
+func (s *Session) SendControl(p []byte) error {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if s.closed {
+		return ErrConnectionClosed
+	}
+	return s.mux.Send(s.remoteAddr, PacketControl, p)
+}
+
+// RecvControl receives a control packet from the peer.
+func (s *Session) RecvControl(ctx context.Context) ([]byte, *net.UDPAddr, error) {
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, nil, ctx.Err()
+
+		case inb, ok := <-s.in:
+			if !ok {
+				return nil, nil, ErrConnectionClosed
+			}
+			if inb.pkt.Kind != PacketControl {
+				continue
+			}
+			return inb.pkt.Payload, inb.addr, nil
+		}
+	}
+}
+
+// -----------------------------------------------------------------------------
+// Backward compatibility (defaults to data plane)
+// -----------------------------------------------------------------------------
+
+// Send sends application data to the remote peer.
+func (s *Session) Send(p []byte) error {
+	return s.SendData(p)
+}
+
+// Recv receives application data from the remote peer.
+func (s *Session) Recv(ctx context.Context) ([]byte, *net.UDPAddr, error) {
+	return s.RecvData(ctx)
+}
+
+// -----------------------------------------------------------------------------
+// Keepalive (control plane)
+// -----------------------------------------------------------------------------
+
+// SetKeepalive sets the keepalive interval for the session.
+func (s *Session) SetKeepalive(interval time.Duration) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.keepaliveInterval = interval
+}
+
+// StartKeepalive starts the keepalive goroutine.
 func (s *Session) StartKeepalive(ctx context.Context) {
 	s.mu.RLock()
 	interval := s.keepaliveInterval
@@ -78,12 +137,14 @@ func (s *Session) StartKeepalive(ctx context.Context) {
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				_ = s.Send(nil)
+				// keepalive is a control packet with empty payload
+				_ = s.SendControl(nil)
 			}
 		}
 	}()
 }
 
+// Close closes the session.
 func (s *Session) Close() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
