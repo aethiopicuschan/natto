@@ -1,2 +1,7 @@
 ignore:
   - "example"
+coverage:
+  status:
+    patch:
+      default:
+        informational: true
