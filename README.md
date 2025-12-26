@@ -21,9 +21,11 @@ go get -u github.com/aethiopicuschan/natto
 
 ### TODO
 
-- `natto/nat`: Support TCP hole punching.
 - `natto/stun`: STUN client implementation for discovering public IP and port mappings.
 
 ## Example
 
-See the [examples directory](./examples) for usage examples, including UDP hole punching scenarios.
+See the [examples directory](./examples) for usage examples.
+
+- [NAT Traversal with UDP Hole Punching](./examples/nat/udp)
+- [NAT Traversal with UDP to TCP Upgrade](./examples/nat/tcp_upgrade)
