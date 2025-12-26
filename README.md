@@ -26,4 +26,4 @@ go get -u github.com/aethiopicuschan/natto
 
 ## Example
 
-See the [examples directory](./example) for usage examples, including UDP hole punching scenarios.
+See the [examples directory](./examples) for usage examples, including UDP hole punching scenarios.
