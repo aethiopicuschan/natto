@@ -6,7 +6,7 @@
 [![CI](https://github.com/aethiopicuschan/natto/actions/workflows/ci.yaml/badge.svg)](https://github.com/aethiopicuschan/natto/actions/workflows/ci.yaml)
 [![codecov](https://codecov.io/gh/aethiopicuschan/natto/graph/badge.svg?token=6A4Y75PXH5)](https://codecov.io/gh/aethiopicuschan/natto)
 
-`natto` is a lightweight Go library for NAT traversal using UDP and TCP hole punching.
+`natto` is a lightweight Go library for NAT traversal using UDP hole punching.
 It helps applications establish direct peer-to-peer connections across NATs with minimal dependencies and a simple API.
 
 ## Installation
@@ -14,3 +14,16 @@ It helps applications establish direct peer-to-peer connections across NATs with
 ```sh
 go get -u github.com/aethiopicuschan/natto
 ```
+
+## Packages
+
+- `natto/nat`: Core NAT traversal functionalities, including UDP hole punching.
+
+### TODO
+
+- `natto/nat`: Support TCP hole punching.
+- `natto/stun`: STUN client implementation for discovering public IP and port mappings.
+
+## Example
+
+See the [examples directory](./example) for usage examples, including UDP hole punching scenarios.
