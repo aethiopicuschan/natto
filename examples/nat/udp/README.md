@@ -12,7 +12,7 @@ for both **local testing** and **real global IP environments (VPS, cloud)**.
 ## Directory Structure
 
 ```
-examples/global_ip/
+examples/udp/
 ├── acceptor/
 │ └── main.go
 ├── dialer/
