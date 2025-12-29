@@ -2,20 +2,47 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"net"
+	"os"
 	"time"
 
 	"github.com/aethiopicuschan/natto/nat"
 )
 
+// defaultSTUNServer is Google's public STUN server.
+const defaultSTUNServer = "stun.l.google.com:19302"
+
 func main() {
-	conn, err := net.ListenUDP("udp4", &net.UDPAddr{
-		IP:   net.IPv4(0, 0, 0, 0),
-		Port: 0,
-	})
+	// Parse command-line arguments.
+	stunServer := flag.String(
+		"stun",
+		defaultSTUNServer,
+		"STUN server address (host:port)",
+	)
+	flag.Parse()
+
+	fmt.Println("STUN server:", *stunServer)
+
+	// Resolve STUN server address.
+	raddr, err := net.ResolveUDPAddr("udp", *stunServer)
 	if err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, "failed to resolve STUN server:", err)
+		os.Exit(1)
+	}
+
+	// Create a local UDP address (ephemeral port).
+	laddr := &net.UDPAddr{
+		IP:   net.IPv4zero,
+		Port: 0,
+	}
+
+	// Dial UDP (this creates a "connected" UDP socket).
+	conn, err := net.DialUDP("udp", laddr, raddr)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "failed to dial UDP:", err)
+		os.Exit(1)
 	}
 	defer conn.Close()
 
