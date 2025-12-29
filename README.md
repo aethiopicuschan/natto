@@ -18,10 +18,11 @@ go get -u github.com/aethiopicuschan/natto
 ## Packages
 
 - `natto/nat`: Core NAT traversal functionalities, including UDP hole punching.
+- `natto/stun`: STUN client implementation for discovering public IP and port mappings.
 
 ### TODO
 
-- `natto/stun`: STUN client implementation for discovering public IP and port mappings.
+- `natto/turn`: TURN client implementation for relay-based NAT traversal.
 
 ## Example
 
