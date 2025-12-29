@@ -5,3 +5,4 @@ coverage:
     patch:
       default:
         informational: true
+comment: false
