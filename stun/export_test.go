@@ -12,3 +12,7 @@ var TestReadU16 = readU16
 var TestReadU32 = readU32
 var TestPutU16 = putU16
 var TestPutU32 = putU32
+
+// attribute builders
+var TestBuildXORMappedAddressAttr = buildXORMappedAddressAttr
+var TestBuildSoftwareAttr = buildSoftwareAttr
